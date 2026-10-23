@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Back Room</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  html { color-scheme: light; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  /* Layout: brand statement on the left, account card (sign in / create account tabs) on the right; stacks on phones. After sign-in a plain members page replaces both. */
+  :root {
+    --bg: #eef1f5;
+    --surface: #fbfcfd;
+    --fg: #131a24;
+    --muted: #5a6678;
+    --line: #d3d9e2;
+    --accent: #0b6e6e;
+    --accent-fg: #ffffff;
+    --danger: #b3261e;
+    --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e131a; --surface: #151c26; --fg: #e6ebf2; --muted: #93a0b3;
+      --line: #263040; --accent: #3ec9b8; --accent-fg: #06201d; --danger: #ff8a80;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e131a; --surface: #151c26; --fg: #e6ebf2; --muted: #93a0b3;
+    --line: #263040; --accent: #3ec9b8; --accent-fg: #06201d; --danger: #ff8a80;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.55;
+    padding-block: 32px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  h1, h2 { font-family: var(--font-display); text-wrap: balance; line-height: 1.1; margin: 0; }
+  p { margin: 0; }
+  .mono, .eyebrow { font-family: var(--font-mono); }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+  /* Account screen */
+  .gate {
+    max-width: 960px;
+    margin-inline: auto;
+    min-height: 70vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(32px, 6vw, 80px);
+    align-items: center;
+  }
+  .gate h1 { font-size: clamp(44px, 8vw, 84px); font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .gate .sub { color: var(--muted); margin-top: 18px; max-width: 34ch; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 28px 28px;
+    min-width: 0;
+  }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); margin-inline: -28px; padding-inline: 16px; }
+  .tab {
+    font: inherit; font-weight: 600; font-size: 16px;
+    background: none; border: 0; border-bottom: 2px solid transparent;
+    color: var(--muted); padding: 14px 12px 12px; margin-bottom: -1px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+  form { display: grid; gap: 18px; margin-top: 24px; }
+  label { display: grid; gap: 6px; font-size: 13px; font-family: var(--font-mono); letter-spacing: 0.04em; color: var(--muted); }
+  input {
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: 17px;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 11px 12px;
+    width: 100%;
+    min-width: 0;
+  }
+  input:focus-visible, .btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hint { font-size: 14px; color: var(--muted); font-family: var(--font-body); letter-spacing: 0; }
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 18px;
+    cursor: pointer;
+  }
+  .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); padding: 8px 14px; font-size: 15px; }
+  .error { min-height: 1.4em; color: var(--danger); font-size: 15px; }
+  .note { font-size: 15px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin-top: 20px; }
+
+  /* Members page */
+  .app-head {
+    max-width: 960px; margin: 0 auto 56px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    border-bottom: 1px solid var(--line); padding-bottom: 16px;
+  }
+  .brand-mini { font-family: var(--font-display); font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .inside { max-width: 960px; margin-inline: auto; }
+  .inside h1 { font-size: clamp(40px, 7vw, 68px); margin-top: 12px; }
+  .lede { color: var(--muted); margin-top: 16px; max-width: 52ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 40px; }
+  .tile { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 22px; min-width: 0; }
+  .tile h2 { font-size: 20px; font-weight: 500; margin-bottom: 10px; }
+  .tile ul { margin: 0; padding-left: 18px; }
+  .tile .mono { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+
+  .admin { max-width: 960px; margin: 56px auto 0; border-top: 1px solid var(--line); padding-top: 28px; }
+  .admin h2 { font-size: 24px; font-weight: 500; }
+  .admin .hint { margin-top: 8px; max-width: 60ch; }
+  .scroll { overflow-x: auto; margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  td.pw { font-family: var(--font-mono); overflow-wrap: anywhere; }
+  .btn.small { padding: 4px 10px; font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .gate { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { transition: border-color 0.2s; }
+    .card:focus-within { border-color: var(--accent); }
+  }
+</style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <div>
+    <p class="eyebrow">Private</p>
+    <h1>Back Room</h1>
+    <p class="sub">Sign in, or create an account with the access code you were given.</p>
+  </div>
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" id="tab-in" role="tab" aria-selected="true" aria-controls="login">Sign in</button>
+      <button type="button" class="tab" id="tab-up" role="tab" aria-selected="false" aria-controls="signup">Create account</button>
+    </div>
+
+    <form id="login" autocomplete="on">
+      <label for="in-user">USERNAME
+        <input id="in-user" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </label>
+      <label for="in-pass">PASSWORD
+        <input id="in-pass" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <div class="error" id="in-err" role="alert" aria-live="polite"></div>
+      <button class="btn" id="in-go" type="submit">Sign in</button>
+    </form>
+
+    <form id="signup" autocomplete="on" hidden>
+      <label for="up-user">CHOOSE A USERNAME
+        <input id="up-user" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="24">
+        <span class="hint">3 to 24 characters: letters, numbers, dot, dash, underscore.</span>
+      </label>
+      <label for="up-pass">CHOOSE A PASSWORD
+        <input id="up-pass" name="new-password" type="password" autocomplete="new-password" required minlength="8" maxlength="100">
+        <span class="hint">At least 8 characters.</span>
+      </label>
+      <label for="up-pass2">REPEAT PASSWORD
+        <input id="up-pass2" name="new-password-2" type="password" autocomplete="new-password" required minlength="8">
+      </label>
+      <label for="up-code">ACCESS CODE
+        <input id="up-code" name="access-code" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+        <span class="hint">Ask whoever shared this page with you.</span>
+      </label>
+      <div class="error" id="up-err" role="alert" aria-live="polite"></div>
+      <button class="btn" id="up-go" type="submit">Create account</button>
+    </form>
+
+    <p class="note" id="note" hidden></p>
+  </div>
+</div>
+<div id="members" hidden></div>
+
+<script>
+  var CFG = {"url":"https://dwoygfxkdstlgaknkctr.supabase.co","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3b3lnZnhrZHN0bGdha25rY3RyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzY0MjYsImV4cCI6MjEwODMxMjQyNn0.ouB30YSKew8iKGNOLz9Gp63_bLsdGk3Q8jgoQFrUNw8"};
+  var VAULT = {"iter":600000,"content":{"iv":"aiMqaWxa9HfwOQaL","data":"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"},"site":{"salt":"tIE+BvNx/amZpwd9mFUyGQ==","iv":"o7ry/IDAzoI62+uQ","data":"9M+0rkdhSHdire/mu49d9e5VXUGhq0Feu0hzS2LdCgo+naehE3ijYDcLyWfjXslX"},"ownerPub":{"kty":"RSA","n":"myNqV8wXm2-hm52isbJEwbWeGMoYiLwco0UQ97mupkviIiymwS-FrToAlKiSO4peZ5sz6Nifa3ku8llrNLFfciecSWji1C6NAw4_aa646eBENneHGL-ECxH8oBUwlIAwDKcBOyYOLpnwbKi_Z-pJ9lZWszx1DuUJUjB2qg3X4jI0nPACxmRttahUJZHGTFyHQQ0R_3ccdXIpNarucNZuoX04LtoRkYzcLql5x3w21afdZ4B_YyanV2k2T1SDBsJs-XL0tBKmO5SeU6J-wrOt-y9p5oOyl84w26rnZnUw__-kLSU4D0qp4crRaB18ilYfQBroBjyZ1z77QHiI_VUwsQ","e":"AQAB"}};
+  var enc = new TextEncoder(), dec = new TextDecoder();
+
+  function $(id) { return document.getElementById(id); }
+  function b64(u8) { var s = ""; for (var i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); }
+  function unb64(s) { var bin = atob(s), o = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o; }
+
+  async function derive(secret, salt, usages) {
+    var m = await crypto.subtle.importKey("raw", enc.encode(secret), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: VAULT.iter, hash: "SHA-256" }, m, { name: "AES-GCM", length: 256 }, false, usages);
+  }
+  async function unwrap(w, secret) {
+    var k = await derive(secret, unb64(w.salt), ["decrypt"]);
+    return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.iv) }, k, unb64(w.data)));
+  }
+  async function wrap(raw, secret) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    var k = await derive(secret, salt, ["encrypt"]);
+    var ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, k, raw));
+    return { salt: b64(salt), iv: b64(iv), data: b64(ct) };
+  }
+  async function openContent(raw) {
+    var key = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+    return dec.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(VAULT.content.iv) }, key, unb64(VAULT.content.data)));
+  }
+  async function sealForOwner(text) {
+    var key = await crypto.subtle.importKey("jwk", VAULT.ownerPub, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
+    return b64(new Uint8Array(await crypto.subtle.encrypt({ name: "RSA-OAEP" }, key, enc.encode(text))));
+  }
+  function importPriv(jwk) {
+    return crypto.subtle.importKey("jwk", jwk, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["decrypt"]);
+  }
+
+  // Account storage: one row per account in the Supabase "accounts" table.
+  async function api(method, path, body) {
+    var res = await fetch(CFG.url + "/rest/v1/" + path, {
+      method: method,
+      headers: { apikey: CFG.key, Authorization: "Bearer " + CFG.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) { var e = new Error("http " + res.status); e.status = res.status; throw e; }
+    return method === "GET" ? res.json() : null;
+  }
+
+  function showNote(text) { var n = $("note"); n.textContent = text; n.hidden = !text; }
+  function pick(which) {
+    var inn = which === "in";
+    $("tab-in").setAttribute("aria-selected", inn);
+    $("tab-up").setAttribute("aria-selected", !inn);
+    $("login").hidden = !inn;
+    $("signup").hidden = inn;
+    $("in-err").textContent = ""; $("up-err").textContent = "";
+  }
+  $("tab-in").addEventListener("click", function () { pick("in"); });
+  $("tab-up").addEventListener("click", function () { pick("up"); });
+
+  function enter(raw, username, adminKey) {
+    return openContent(raw).then(function (html) {
+      $("members").innerHTML = html;
+      var who = $("who"); if (who) who.textContent = username;
+      $("gate").hidden = true;
+      $("members").hidden = false;
+      $("lock").addEventListener("click", leave);
+      window.scrollTo(0, 0);
+      if (adminKey) showAdmin(adminKey);
+    });
+  }
+  function leave() {
+    $("members").hidden = true; $("members").innerHTML = "";
+    $("gate").hidden = false;
+    ["in-pass", "up-pass", "up-pass2", "up-code"].forEach(function (id) { $(id).value = ""; });
+    pick("in"); $("in-user").focus();
+  }
+
+  // Admin only: list accounts and decrypt a password on request. The decryption key only opens with the admin password.
+  async function showAdmin(priv) {
+    try {
+      var rows = await api("GET", "accounts?select=username,pw,created_at&order=created_at.asc");
+      var sec = document.createElement("section"); sec.className = "admin";
+      var h = document.createElement("h2"); h.textContent = "Accounts";
+      var p = document.createElement("p"); p.className = "hint";
+      p.textContent = "Only the admin sees this section. Passwords are stored encrypted and are decrypted here, in your browser, when you press Show.";
+      var box = document.createElement("div"); box.className = "scroll";
+      var table = document.createElement("table");
+      var head = table.createTHead().insertRow();
+      ["Username", "Created", "Password"].forEach(function (x) { var th = document.createElement("th"); th.textContent = x; head.appendChild(th); });
+      var body = table.createTBody();
+      rows.forEach(function (a) {
+        var tr = body.insertRow();
+        tr.insertCell().textContent = a.username;
+        tr.insertCell().textContent = a.created_at ? new Date(a.created_at).toLocaleDateString() : "";
+        var cell = tr.insertCell(); cell.className = "pw";
+        var btn = document.createElement("button");
+        btn.type = "button"; btn.className = "btn ghost small"; btn.textContent = "Show";
+        btn.addEventListener("click", async function () {
+          if (btn.dataset.shown) { cell.textContent = ""; cell.appendChild(btn); btn.textContent = "Show"; delete btn.dataset.shown; return; }
+          try {
+            var plain = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, priv, unb64(a.pw));
+            cell.textContent = dec.decode(plain) + " ";
+            btn.textContent = "Hide"; btn.dataset.shown = "1"; cell.appendChild(btn);
+          } catch (x) { cell.textContent = "Couldn't decrypt"; }
+        });
+        cell.appendChild(btn);
+      });
+      box.appendChild(table);
+      sec.appendChild(h); sec.appendChild(p); sec.appendChild(box);
+      ($("admin-slot") || $("members")).appendChild(sec);
+    } catch (x) { /* the admin list is optional */ }
+  }
+
+  var fails = 0;
+  function penalise(btn) { fails++; btn.disabled = true; setTimeout(function () { btn.disabled = false; }, Math.min(fails * 1000, 8000)); }
+  var USERNAME = /^[a-z0-9][a-z0-9._-]{2,23}$/;
+  var OFFLINE = "Couldn't reach the account service. Check your connection and try again.";
+
+  $("login").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("in-err"), go = $("in-go");
+    err.textContent = ""; go.disabled = true;
+    var u = $("in-user").value.trim().toLowerCase(), pw = $("in-pass").value;
+    var rows;
+    try { rows = await api("GET", "accounts?select=*&username=eq." + encodeURIComponent(u)); }
+    catch (x) { err.textContent = OFFLINE; go.disabled = false; return; }
+    try {
+      var raw = null, hit = null;
+      for (var i = 0; i < rows.length && !raw; i++) {
+        try { raw = await unwrap(rows[i], u + ":" + pw); hit = rows[i]; } catch (x) {}
+      }
+      if (!raw) throw new Error("bad");
+      var adminKey = null;
+      if (hit.priv) { try { adminKey = await importPriv(JSON.parse(dec.decode(await unwrap(hit.priv, u + ":" + pw)))); } catch (x) {} }
+      $("in-pass").value = "";
+      await enter(raw, u, adminKey);
+      go.disabled = false;
+    } catch (x) {
+      err.textContent = "That username or password is wrong. Check both and try again.";
+      $("in-pass").value = "";
+      penalise(go);
+    }
+  });
+
+  $("signup").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("up-err"), go = $("up-go");
+    err.textContent = ""; go.disabled = true;
+    function stop(msg, slow) { err.textContent = msg; if (slow) penalise(go); else go.disabled = false; }
+    var u = $("up-user").value.trim().toLowerCase(), pw = $("up-pass").value;
+    if (!USERNAME.test(u)) return stop("Usernames are 3 to 24 characters and use only letters, numbers, dot, dash and underscore.");
+    if (pw.length < 8) return stop("Use a password of at least 8 characters.");
+    if (enc.encode(pw).length > 150) return stop("That password is too long. Use 150 bytes or fewer.");
+    if (pw !== $("up-pass2").value) return stop("The two passwords don't match.");
+    var raw;
+    try { raw = await unwrap(VAULT.site, $("up-code").value.trim().toLowerCase()); }
+    catch (x) { return stop("That access code isn't right.", true); }
+    try {
+      var w = await wrap(raw, u + ":" + pw);
+      await api("POST", "accounts", { username: u, salt: w.salt, iv: w.iv, data: w.data, pw: await sealForOwner(pw) });
+    } catch (x) {
+      if (x && x.status === 409) return stop("That username is taken. Pick another.");
+      return stop(x && x.status ? "Couldn't save the account. Try again in a moment." : OFFLINE);
+    }
+    ["up-pass", "up-pass2", "up-code"].forEach(function (id) { $(id).value = ""; });
+    await enter(raw, u, null);
+    go.disabled = false;
+  });
+</script>
+</body>
+</html>
