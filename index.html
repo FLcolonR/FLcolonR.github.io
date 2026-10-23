@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Back Room</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  html { color-scheme: light; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  /* Layout: brand statement on the left, account card (sign in / create account tabs) on the right; stacks on phones. After sign-in a plain members page replaces both. */
+  :root {
+    --bg: #eef1f5;
+    --surface: #fbfcfd;
+    --fg: #131a24;
+    --muted: #5a6678;
+    --line: #d3d9e2;
+    --accent: #0b6e6e;
+    --accent-fg: #ffffff;
+    --danger: #b3261e;
+    --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e131a; --surface: #151c26; --fg: #e6ebf2; --muted: #93a0b3;
+      --line: #263040; --accent: #3ec9b8; --accent-fg: #06201d; --danger: #ff8a80;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e131a; --surface: #151c26; --fg: #e6ebf2; --muted: #93a0b3;
+    --line: #263040; --accent: #3ec9b8; --accent-fg: #06201d; --danger: #ff8a80;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.55;
+    padding-block: 32px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  h1, h2 { font-family: var(--font-display); text-wrap: balance; line-height: 1.1; margin: 0; }
+  p { margin: 0; }
+  .mono, .eyebrow { font-family: var(--font-mono); }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+  /* Account screen */
+  .gate {
+    max-width: 960px;
+    margin-inline: auto;
+    min-height: 70vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(32px, 6vw, 80px);
+    align-items: center;
+  }
+  .gate h1 { font-size: clamp(44px, 8vw, 84px); font-weight: 700; letter-spacing: -0.02em; margin-top: 14px; }
+  .gate .sub { color: var(--muted); margin-top: 18px; max-width: 34ch; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 28px 28px;
+    min-width: 0;
+  }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); margin-inline: -28px; padding-inline: 16px; }
+  .tab {
+    font: inherit; font-weight: 600; font-size: 16px;
+    background: none; border: 0; border-bottom: 2px solid transparent;
+    color: var(--muted); padding: 14px 12px 12px; margin-bottom: -1px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+  form { display: grid; gap: 18px; margin-top: 24px; }
+  label { display: grid; gap: 6px; font-size: 13px; font-family: var(--font-mono); letter-spacing: 0.04em; color: var(--muted); }
+  input {
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: 17px;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 11px 12px;
+    width: 100%;
+    min-width: 0;
+  }
+  input:focus-visible, .btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hint { font-size: 14px; color: var(--muted); font-family: var(--font-body); letter-spacing: 0; }
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 18px;
+    cursor: pointer;
+  }
+  .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); padding: 8px 14px; font-size: 15px; }
+  .error { min-height: 1.4em; color: var(--danger); font-size: 15px; }
+  .note { font-size: 15px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin-top: 20px; }
+
+  /* Members page */
+  .app-head {
+    max-width: 960px; margin: 0 auto 56px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    border-bottom: 1px solid var(--line); padding-bottom: 16px;
+  }
+  .brand-mini { font-family: var(--font-display); font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .inside { max-width: 960px; margin-inline: auto; }
+  .inside h1 { font-size: clamp(40px, 7vw, 68px); margin-top: 12px; }
+  .lede { color: var(--muted); margin-top: 16px; max-width: 52ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 40px; }
+  .tile { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 22px; min-width: 0; }
+  .tile h2 { font-size: 20px; font-weight: 500; margin-bottom: 10px; }
+  .tile ul { margin: 0; padding-left: 18px; }
+  .tile .mono { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+
+  .admin { max-width: 960px; margin: 56px auto 0; border-top: 1px solid var(--line); padding-top: 28px; }
+  .admin h2 { font-size: 24px; font-weight: 500; }
+  .admin .hint { margin-top: 8px; max-width: 60ch; }
+  .scroll { overflow-x: auto; margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  tr:last-child td { border-bottom: 0; }
+  td.pw { font-family: var(--font-mono); overflow-wrap: anywhere; }
+  .btn.small { padding: 4px 10px; font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .gate { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { transition: border-color 0.2s; }
+    .card:focus-within { border-color: var(--accent); }
+  }
+</style>
+</head>
+<body>
+<div class="gate" id="gate">
+  <div>
+    <p class="eyebrow">Private</p>
+    <h1>Back Room</h1>
+    <p class="sub">Sign in with your username and password to open the page.</p>
+  </div>
+  <div class="card">
+    <form id="login" autocomplete="on" style="margin-top:20px">
+      <label for="in-user">USERNAME
+        <input id="in-user" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </label>
+      <label for="in-pass">PASSWORD
+        <input id="in-pass" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <div class="error" id="in-err" role="alert" aria-live="polite"></div>
+      <button class="btn" id="in-go" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+<div id="members" hidden></div>
+<script>
+  var VAULT = {"iter":600000,"content":{"iv":"/iG1j98CgZMK+7jZ","data":"SrwwoV/BjOEIvGFCv0yB7vTwMp5pzWMc7b2yWnDWhOZnlI388RMf4ko/hLTT0cIWpstH1VMx4PyV9cpEA7eZSplGDnrLD9xkJlqmoGpH5zQ9bLeNwL6Faz1JoCfusjd9cNI4BrENmlCG/hCuZQIIwetHjNNLf2ld2TxG79YgSsGkCqeVsUUoy33dr9t8izZvsflg4wxCXVGr++kg1zK/4sF2wLi5IC+xyET/GgXS2pSXg1uV1KuJIwl2XYNLAjSgXqnEa60kSAuAKTPjblyDVFqKQIRFc9IqGz0zcmrWERXgfi82u/X/lyVK2WQKC2TtaaZpJ1j6S72Cq1G5rjMHs4YryPoXLHj/fSIrRERNdlGCXFkB1TLPuXEwfltHzXHNfWazony6A+s6QN48FWYcEsOr/5RGLdl33w6A8TAcCABzmfGKJZsqgu+ks4YQZ+6bY/oSKzABMW1c9k+pGhigftHibXrlYMnEoAJyc1rh5+A2NReBMynLc76pAUyphWnKPFfvmeMbP4UTMYDCWnxnV5OrRV5LwXSRRAK6LtPqgSxSDHI9Viqj1P9dH4/8olOqIkHw3BlGBfnUPT8lYtYXaRf+rPQgPYHsanSFNLG5VREFcGpRT9hcciERBraKt7fUDgOkb4gredxAWIKY6f2fZpOVIS7L5teCJM7gHSNP+C5+ZVHQ4QplbPrpLzyCXzzu2cz/iOxBtzFPIJ5SBa2z/qPWDWjQXRRy2yU/1VWz14fbSmZRTo196bYr+nsWb//I73N7PDdYMSXIIPqGtYSSWZzbQaMwGucqgq3yiq70M3qiYlWd2g3SCdFolfD9y7mWwIq+lUCRr+XR6ztCdVHFPq7sjHSsJG5wQFADF+i+qphNjppG9tL4ifMj2ohDwqaPE9nA71Ix+EIcF772oxyeyU+OywmTGOhz3fHLsPvO/IWQRtTqIVY79BVY29ZXSFq9lF2hfbxrq6TxgDQDR9Rswl6NXI3J/Z00Li9ERN2wA/ckJy1FZJxSPUT1thNw6v3GQpxFsIJe9aei3o/oNn2K8resXbk53NCsK3ZURumR+G3z5alA4WsL2kre+Y2p8CV6NZ99m/jQAJwAyS/EfzpUSpFz7imogvYUksP3S+fc3IpBd5kUw0jcWsoHLFT/nEHzXzM1vgm0asx9vxGcTaLApRUgk3DpqJS9C9krtMvhfnGkIOiaOZW0OvOGwr7u9OTU5oJUU+OJLFI2cNzfEZmSezy4lOxpxm2R7xiwiy1/wu+DV3EcxzfeulFkSQEGjZ+mdA5+aB6fwMulT6i8kw=="},"accounts":[{"username":"keeper","salt":"BiZaSA33zBba2wKQmPEmIg==","iv":"3Ssn/egGuSd8bObx","data":"qsFtIwWs/UUlSkfkwZi8hG81oIgd7g2WV04Sqq2fgg+e8Iwa6CTw0fRYCzkkajxe"}]};
+  var enc = new TextEncoder(), dec = new TextDecoder();
+  function $(id) { return document.getElementById(id); }
+  function unb64(s) { var bin = atob(s), o = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) o[i] = bin.charCodeAt(i); return o; }
+
+  async function unwrap(w, secret) {
+    var m = await crypto.subtle.importKey("raw", enc.encode(secret), "PBKDF2", false, ["deriveKey"]);
+    var k = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: unb64(w.salt), iterations: VAULT.iter, hash: "SHA-256" }, m, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(w.iv) }, k, unb64(w.data)));
+  }
+  async function openContent(raw) {
+    var key = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+    return dec.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(VAULT.content.iv) }, key, unb64(VAULT.content.data)));
+  }
+  function leave() {
+    $("members").hidden = true; $("members").innerHTML = "";
+    $("gate").hidden = false; $("in-pass").value = ""; $("in-user").focus();
+  }
+
+  var fails = 0;
+  $("login").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("in-err"), go = $("in-go");
+    err.textContent = ""; go.disabled = true;
+    var u = $("in-user").value.trim().toLowerCase(), pw = $("in-pass").value;
+    try {
+      var raw = null;
+      for (var i = 0; i < VAULT.accounts.length && !raw; i++) {
+        if (VAULT.accounts[i].username !== u) continue;
+        try { raw = await unwrap(VAULT.accounts[i], u + ":" + pw); } catch (x) {}
+      }
+      if (!raw) throw new Error("bad");
+      var html = await openContent(raw);
+      $("members").innerHTML = html;
+      var who = $("who"); if (who) who.textContent = u;
+      $("gate").hidden = true; $("members").hidden = false;
+      $("lock").addEventListener("click", leave);
+      $("in-pass").value = ""; go.disabled = false;
+      window.scrollTo(0, 0);
+    } catch (x) {
+      err.textContent = "That username or password is wrong. Check both and try again.";
+      $("in-pass").value = "";
+      fails++;
+      setTimeout(function () { go.disabled = false; }, Math.min(fails * 1000, 8000));
+    }
+  });
+</script>
+</body>
+</html>
